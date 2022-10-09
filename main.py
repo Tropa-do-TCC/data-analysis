@@ -26,13 +26,13 @@ def load_landmarks(filename: str) -> List[Landmark]:
     return landmarks
 
 
-def load_all(directory_name: str) -> List[Landmark]:
+def load_all(directory_name: str, limit: int = 500) -> List[Landmark]:
     filenames = os.listdir(directory_name)
 
     landmarks = []
     i = 0
     for filename in filenames:
-        if i == 500:
+        if i == limit:
             break
         landmarks = landmarks + load_landmarks(f"{directory_name}/{filename}")
         i += 1
