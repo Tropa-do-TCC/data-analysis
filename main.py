@@ -1,67 +1,48 @@
-from typing import List
-import os
-import matplotlib.pyplot as plt
+from os import listdir
+from os.path import isfile, join
+import glob
+import numpy as np
+import math
+from pdb import set_trace
 
+class DataAnalasys:
 
-class Landmark:
-    def __init__(self, x: float, y: float, z: float):
-        self.x = x
-        self.y = y
-        self.z = z
+    def __init__(self) -> None:
+        self.path_to_predicted_landmarks = "./results/landmarks/test/"
+        self.path_to_original_landmarks = "./landmarks_from_ct/"
 
-    def __str__(self):
-        return f"{self.x}, {self.y}, {self.z}"
+    def get_landmarks(self, read_file: str) -> dict:
+        try:
+            landmark_number = 0
+            landmarks = {}
+            with open(read_file, 'r') as file:
+                for row in file:
+                    row = row.split()
+                    landmarks[landmark_number] = list(map(float, row))
+                    landmark_number += 1
+                return landmarks
+        except Exception as ex:
+            print(ex)
 
+    def calculate_mae(self, original_landmarks: dict, predicted_landmarks: dict) -> float:
+        result = []
+        for key, value in original_landmarks.items():
+            ol_x, ol_y, ol_z = value
+            pl_x, pl_y, pl_z = predicted_landmarks[key]
+            result.append(math.dist([ol_x, ol_y, ol_z], [pl_x, pl_y, pl_z]))
+        return np.mean(result)
 
-def load_landmarks(filename: str) -> List[Landmark]:
-    file = open(filename, 'r')
+    def main(self):
+        predicted_landmarks_files = glob.glob(self.path_to_predicted_landmarks + "*.txt")
+        result = []
+        try:
+            for predicted_file in predicted_landmarks_files:
+                file_name = predicted_file.split('/')[-1]
+                original_file_name = self.path_to_original_landmarks + file_name
+                original_landmarks = self.get_landmarks(original_file_name)
+                predicted_landmarks = self.get_landmarks(predicted_file)
+                print(self.calculate_mae(original_landmarks, predicted_landmarks))
+        except Exception as ex:
+            print(ex)
 
-    lines = file.readlines()
-
-    landmarks = []
-    for line in lines:
-        line = line.strip('\n').split(' ')
-        landmarks.append(Landmark(float(line[0]), float(line[1]), float(line[2])))
-
-    return landmarks
-
-
-def load_all(directory_name: str, limit: int = 500) -> List[Landmark]:
-    filenames = os.listdir(directory_name)
-
-    landmarks = []
-    i = 0
-    for filename in filenames:
-        if i == limit:
-            break
-        landmarks = landmarks + load_landmarks(f"{directory_name}/{filename}")
-        i += 1
-
-    return landmarks
-
-
-def plot_ply(x, y, z):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(x, y, z, c=y, marker='o', s=3)
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-    plt.show()
-
-
-def main():
-    landmarks = load_all(f"./points")
-
-    for landmark in landmarks:
-        print(landmark)
-
-    x = [landmark.x for landmark in landmarks]
-    y = [landmark.y for landmark in landmarks]
-    z = [landmark.z for landmark in landmarks]
-
-    plot_ply(x, y, z)
-
-
-if __name__ == '__main__':
-    main()
+DataAnalasys().main()
