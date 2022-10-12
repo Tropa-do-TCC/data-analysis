@@ -48,10 +48,10 @@ class Plot:
 
 
     def plot_ply(self):
-        self.ax.scatter(self.x, self.y, self.z, c=self.y, marker='o', s=3)
+        self.ax.scatter(self.y, self.x, self.z, c=self.y, marker='o', s=3)
 
-        self.ax.set_xlabel('X Label')
-        self.ax.set_ylabel('Y Label')
+        self.ax.set_xlabel('Y Label')
+        self.ax.set_ylabel('X Label')
         self.ax.set_zlabel('Z Label')
 
         self.fig.canvas.mpl_connect('motion_notify_event', self.onMouseMotion)
