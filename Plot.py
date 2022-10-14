@@ -28,7 +28,7 @@ class Plot:
     def calcClosestDatapoint(self, event):
         """"Calculate which data point is closest to the mouse position."""
         distances = [self.distance(
-            self.x[i], self.y[i], self.z[i], event) for i in range(len(self.x))]
+            self.y[i], self.x[i], self.z[i], event) for i in range(len(self.x))]
         return np.argmin(distances)
 
     def onMouseMotion(self, event):
@@ -42,7 +42,7 @@ class Plot:
             self.label.remove()
         # Get data point from array of points X, at position index
         x2, y2, _ = proj3d.proj_transform(
-            self.x[index], self.y[index], self.z[index], self.ax.get_proj())
+            self.y[index], self.x[index], self.z[index], self.ax.get_proj())
         self.label = plt.annotate(self.ct_names[index],
                                   xy=(x2, y2), xytext=(-20, 20), textcoords='offset points', ha='right', va='bottom',
                                   bbox=dict(boxstyle='round,pad=0.5',
@@ -51,15 +51,15 @@ class Plot:
         self.fig.canvas.draw()
 
     def plot_ply(self):
-        self.ax.scatter(self.x, self.y, self.z, c=self.y, marker='o', s=3)
+        self.ax.scatter(self.y, self.x, self.z, c=self.y, marker='o', s=3)
 
         tmp_planes = self.ax.zaxis._PLANES
         self.ax.zaxis._PLANES = (tmp_planes[2], tmp_planes[3],
                                  tmp_planes[0], tmp_planes[1],
                                  tmp_planes[4], tmp_planes[5])
 
-        self.ax.set_xlabel('X Label')
-        self.ax.set_ylabel('Y Label')
+        self.ax.set_xlabel('Y Label')
+        self.ax.set_ylabel('X Label')
         self.ax.zaxis.set_rotate_label(False)
         self.ax.set_zlabel('Z Label', rotation=90)
 
