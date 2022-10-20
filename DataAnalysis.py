@@ -12,6 +12,7 @@ class DataAnalysis:
         self.path_to_train = './teste/train.py'
         self.path_to_predicted_landmarks = "./teste/results/landmarks/test/" #"./results/landmarks/test/"
         self.path_to_original_landmarks = "./landmarks_from_ct/"
+        self.path_to_dist_error = "./teste/results/dist_err/"
 
     def get_landmarks(self, read_file: str) -> dict:
         try:
@@ -25,6 +26,21 @@ class DataAnalysis:
                 return landmarks
         except Exception as ex:
             print(ex)
+
+    def get_error(self, file: str):
+        result = {}
+        is_pixel = True
+        with open(file, 'r') as file:
+            for row in file:
+                row = row.strip('\n')
+                if row.split('(')[-1] == 'mm)': is_pixel = False
+                row = row.split(':')
+                if row[0] in ['Mean', 'Standard deviation']:
+                    type = 'pixel' if is_pixel else 'mm'
+                    name = f'{row[0]} {type}'
+                    result[name] = row[1].replace(' ', '')
+        return result
+
 
     def calculate_euclidean_distance(self, original_landmarks: dict, predicted_landmarks: dict) -> float:
         result = []
@@ -64,9 +80,12 @@ class DataAnalysis:
     def data_analysis(self):
         predicted_landmarks_files = glob.glob(self.path_to_predicted_landmarks + "*.txt")
         result = {}
+        ignored_files = ['CT-151_ps.txt', 'CT-408_ps.txt', 'CT-413_ps.txt', 'CT-415_ps.txt', 'CT-424_ps.txt', 'CT-426_ps.txt', 'CT-432_ps.txt']
         try:
             for predicted_file in predicted_landmarks_files:
                 file_name = predicted_file.split('/')[-1]
+                if file_name in ignored_files:
+                    continue
 
                 original_file_name = self.path_to_original_landmarks + file_name
                 original_landmarks = self.get_landmarks(original_file_name)
@@ -82,6 +101,18 @@ class DataAnalysis:
             network_data = self.infer_data()
             network_data.update(self.train_data())
 
-            return  network_data, result
+            errors_files = predicted_landmarks_files = glob.glob(self.path_to_dist_error + "*.txt")
+
+            ct_errors = {}
+
+            for predicted_file in errors_files:
+                file_name = predicted_file.split('/')[-1]
+                file_name = file_name[file_name.index('CT-'):].split('.')[0]
+
+                compare = file_name + '_ps.txt'
+                if compare not in ignored_files:
+                    ct_errors.setdefault(file_name, self.get_error(predicted_file))
+
+            return  network_data, result, ct_errors
         except Exception as ex:
             print(ex)

@@ -6,7 +6,7 @@ class Excel:
         self.workbook = xlsxwriter.Workbook('Expenses02.xlsx')
         self.worksheet = self.workbook.add_worksheet()
 
-    def generate_excel(self, ct_data: dict, network_data: dict) -> None:
+    def generate_excel(self, ct_data: dict, ct_errors: dict, network_data: dict) -> None:
         col = 0
         row = 1
         media_geral = []
@@ -21,6 +21,10 @@ class Excel:
                 media_geral.append(ed[i])
                 col += 1
             self.worksheet.write(row, col, float("{:.3f}".format(value['mae'])))
+
+            for label in ['Mean mm', 'Standard deviation mm', 'Mean pixel', 'Standard deviation pixel']:
+                col += 1
+                self.worksheet.write(row, col, float("{:.3f}".format(float(ct_errors[key][label]))))
             row += 1
 
         self.worksheet.write(1, col + 2, float("{:.3f}".format(np.mean(media_geral))))
@@ -33,12 +37,13 @@ class Excel:
         self.workbook.close()
 
     def generate_header(self):
-        header = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'MAE', 'media geral', 'eigvec_per',
+        header = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'MAE', 'Mean mm',
+                  'Standard deviation mm', 'Mean pixel', 'Standard deviation pixel', 'media geral', 'eigvec_per',
                   'box_size', 'max_test_steps', 'num_random_init', 'predict_mode', 'shape_model_file']
         row = 0
         col = 1
         for label in header:
             self.worksheet.write(row, col, label)
             col += 1
-            if label == "MAE":
+            if label == 'Standard deviation pixel': #label == "MAE":
                 col += 1
