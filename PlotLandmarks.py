@@ -7,35 +7,44 @@ from Landmark import Landmark
 from Plot import Plot
 
 class PlotLandmarks:
-    def load_landmarks(self, filename: str) -> List[Landmark]:
+    def load_landmarks(self, filename: str, search_file_name: list) -> List[Landmark]:
         with open(filename, 'r') as file:
-
             ct_name = filename.split('/')[-1]
 
+            if ct_name.split('_')[0] in search_file_name:
+                lines = file.readlines()
+
+                landmarks = []
+                for line in lines:
+                    line = line.strip('\n').split(' ')
+                    landmarks.append(Landmark(float(line[0]), float(line[1]), float(line[2]), ct_name))
+
+                return landmarks
+
+    def load_cts(self, filename: str) -> List[str]:
+        with open(filename, 'r') as file:
             lines = file.readlines()
-
-            landmarks = []
+            cts = []
             for line in lines:
-                line = line.strip('\n').split(' ')
-                landmarks.append(Landmark(float(line[0]), float(line[1]), float(line[2]), ct_name))
+                line = line.replace(' ', '').strip('\n')
+                cts.append(line)
+        return cts
 
-            return landmarks
-
-    def load_all(self, directory_name: str, limit: int = 500) -> List[Landmark]:
+    def load_all(self, directory_name: str, search_files: str) -> List[Landmark]:
         filenames = os.listdir(directory_name)
+        search_files_name = self.load_cts(search_files)
 
         landmarks = []
-        i = 0
         for filename in filenames:
-            if i == limit:
-                break
-            landmarks = landmarks + self.load_landmarks(f"{directory_name}/{filename}")
-            i += 1
+            landmark_path = f"{directory_name}/{filename}"
+            ct_data = self.load_landmarks(landmark_path, search_files_name)
+            if ct_data:
+                landmarks = landmarks + ct_data
 
         return landmarks
 
     def show(self):
-        landmarks = self.load_all(f"./landmarks_from_ct")
+        landmarks = self.load_all("./landmarks_from_ct", './teste/list_to_train')
 
         x = [landmark.x for landmark in landmarks]
         y = [landmark.y for landmark in landmarks]
